@@ -163,7 +163,54 @@ http://nodes-app.local:8001
 * .github/workflows this specific path at root of your project is required buy github to trigger the job build
 * You can learn more on github action on my documentation file named git on google drive....
 
-Post Create push this whole project to github
+# Continuous Deployment
+* Next Part is Continuous DEPLOYMENT using ARGOCD
+* Create an isolated logical space (namespace) inside your cluster specifically for Argo CD resources.
+```
+kubectl create namespace argocd
+```
+* Installs Argo CD using server-side execution. The '--server-side' flag tells the cluster API to handle
+the massive YAML file, and '--force-conflicts' ensures any existing fields are cleanly overwritten.
+```
+kubectl apply -n argocd --server-side --force-conflicts -f https://githubusercontent.com
+```
+* Lists every workload (Pods, Services, Deployments, ReplicaSets) inside the argocd namespace to verify they are running.
+```
+kubectl get all --namespace argocd
+```
+
+* Creates a network tunnel from your cluster to your host machine using custom port 8083.
+'--address 0.0.0.0' allows your Windows browser to access the UI via https://localhost:8001.
+```
+kubectl port-forward svc/argocd-server -n 
+argocd 8083:443 --address 0.0.0.0
+```
+* we can now access the argo cd app running as pod in our cluster using localhost:8083
+It will ask for username and password(next instruction)
+* Lists all secure data objects (Secrets) in the namespace so you can identify the one holding the initial admin password.
+```
+kubectl get secrets -n argocd
+```
+* Opens the secret configuration file in an interactive text editor so you can manually find and copy the encrypted password string.
+```
+kubectl edit secret argocd-initial-admin-secret -n argocd
+```
+* Takes your copied, encrypted base64 password string and translates it back into readable, plain text so you can log into the UI.
+```
+echo R0gtNU9MTEl5Y3B5R21Hbg== | base64 --decode
+```
+* it will give you plain text password which you can paste into argocd app in browser
+* Now once we logged in the argocd server we can configure our project there
+repository will be git hub repo and argocd will watch is go-web-app/values.yaml if the values is changed in this file argocd will trigger the job and will start rolling update...
+*ARGOCD project create setting
+*  **Application Name:** go-web-app
+
+*  **Project Name:** defaultSync Policy: Set to Automatic and check SelfHeal. (SelfHeal ensures that if someone manually messes with your MiniKube cluster using kubectl, Argo CD will instantly overwrite it to match Git
+*  **Repository URL:** https://github.comRevision: HEAD (or main)
+*  **Path:** go-web-app (This is the folder containing your Helm chart).
+*  **Destination Cluster URL:** https://default.svc (This always points to the local cluster Argo CD is currently running inside).
+*  **Destination Namespace:** default
+
 
 
 
