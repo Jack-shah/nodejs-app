@@ -156,6 +156,14 @@ kubectl port-forward svc/ingress-nginx-controller 8001:80 -n ingress-nginx
 http://nodes-app.local:8001
 ```
 
+# Continuous Integration
+* Automating all task done before
+* CI part(build, test,static code test, and build docker image and will push it to dockerhub)using github actions
+* Github action is similar to jenkins job build in jenkins we used jenkinsfile here we will be using .github/workflows/cicd.yaml (workflow file) to build the job 
+* .github/workflows this specific path at root of your project is required buy github to trigger the job build
+* You can learn more on github action on my documentation file named git on google drive....
+
+Post Create push this whole project to github
 
 
 
