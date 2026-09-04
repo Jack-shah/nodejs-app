@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/dist
+hooks:
+  BeforeInstall:
+    - location: scripts/beforeinstall.sh
+      timeout: 60
+    - location: scripts/install.sh
+      timeout: 240
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 60
+  ValidateService:
+    - location: scripts/validate.sh
+      timeout: 30

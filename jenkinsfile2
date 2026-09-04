@@ -1,0 +1,49 @@
+peline {
+    agent {
+        docker{
+            image 'awajid3/npmnodegit:1.0.0'
+            args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+    stages {
+        stage('check prerequisites') {
+            steps {
+                sh '''
+                npm -v
+                node -v
+                '''
+            }
+        }
+        stage('checkout the project code') {
+            steps {
+    
+                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/Balvinder-1995/youtube-content.git'
+                sh '''
+                pwd
+                ls -a
+                '''
+            }
+        }
+    stage('install dependecies') {
+            steps {
+                sh '''
+                pwd
+                cd nodejs-application
+                ls -a
+                npm install
+                '''
+            }
+        }
+    stage('Build') {
+            steps {
+                sh '''
+                 pwd
+                 cd nodejs-application
+                 npm run build        
+                 node dist/src/index.js
+                 '''
+            }
+        }
+    }
+}
+

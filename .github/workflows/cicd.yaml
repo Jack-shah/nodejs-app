@@ -1,0 +1,66 @@
+# CICD using GitHub actions.
+# As we have already tested our image on local  so we will directly pus it to dockerhub
+
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'helm/**'
+      - 'README.md'
+      - 'About_project'
+
+jobs:
+  
+  # 1. We jumped straight to the push job because Dockerfile does all the building!
+  push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Buildx handles structural layer caching for Docker layers
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PAT }}
+
+    - name: Build and Push action
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: awajid3/nodejs_app:${{ github.run_id }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # 2. Sync the generated build ID back into your Helm configurations
+  update-newtag-in-helm-chart:
+    runs-on: ubuntu-latest
+    needs: push
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.MYTOKEN }}
+
+    - name: Update tag in Helm chart
+      run: |
+        sed -i 's/tag: .*/tag: "${{ github.run_id }}"/' helm/values.yaml
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.email "awajid980@gmail.com"
+        git config --global user.name "jackshah"
+        git add helm/values.yaml
+        git commit -m "chore: update container image tag to ${{ github.run_id }} [skip ci]"
+        git push
